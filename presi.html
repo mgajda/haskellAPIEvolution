@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      img { max-height: 40%; max-width: 100%; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Haskell API evolution
+### Michal J. Gajda
+
+## Presented on Haskell.SG
+
+### April 13th 2016
+
+---
+# Goal of this talk
+
+## This is invitation for the discussion.
+
+## I raise topics and techniques.
+
+## Ask for your opinions!
+
+---
+# Simple tasks in API evo (part 1 of the talk)
+
+## Phasing out function
+## Efficiency improvement
+## Optional arguments
+
+## _Additional constructors_ (_antipattern?_)
+
+---
+# Phasing out function seems easy
+
+## Warn with pragma [`DEPRECATED`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/pragmas.html#warning-deprecated-pragma)
+```haskell
+{-# DEPRECATED f, C, T "Phased out in version 2.0" #-}
+```
+
+## Move from `MyModule` to `MyModule.Compat`
+### Better for long-running APIs - see [`base-compat`](http://hackage.haskell.org/package/base-compat)
+---
+# Efficiency improvement
+
+## Notify user:
+```haskell
+darcs-2.1.2\src\CommandLine.lhs:94:1: Error: Use concatMap
+Found:
+  concat $ map escapeC s
+Why not:
+  concatMap escapeC s
+```
+## HLint rule:
+```haskell
+error = concat (map f x) ==&gt; concatMap f x
+```
+---
+# Optional arguments
+
+
+```haskell
+import Data.Default
+
+createProcess :: CreateProcess -&gt; IO ExitCode
+
+data CreateProcess {
+    executable   ::  FilePath
+  , arguments    :: [String]
+  , optionalArg1 ::  Arg1
+  }
+
+instance Default CreateProcess where
+  def = CreateProcess {
+          executable   = "echo"
+        , arguments    = []
+        , optionalArg1 = ... some default value ...
+        }
+
+main = createProcess (def { executable="echo" })
+```
+---
+# Additional constructors
+
+```haskell
+data MyDescription =
+    DescriptionV1 { attrA :: Int }
+  | DescriptionV2 { attrA :: Double, attrB :: Bool }
+  | DescriptionV3 { attrA :: Double, attrB :: Bool, attrC :: Maybe Bool }
+
+getAttrB DescriptionV2 {..} = Just attrB
+getAttrB DescriptionV3 {..} = Just attrB
+getAttrB _                  = Nothing
+```
+
+# This approach is *discouraged*, since it scales much worse than `Default`.
+---
+# Longer term perspective (part 2 of the talk)
+
+### Essential to reduce number of functions and types:
+#### Use classes
+#### Split into modules
+#### Rules
+#### Monomorphizing modules
+#### Classes
+
+---
+# Reduce evolution
+## Reduce API surface
+### Stable recommended interface:
+```haskell
+import Data.Octree
+```
+
+### For special functions, that change more often:
+```haskell
+import Data.Octree.Internal
+```
+---
+# Remove extra functions with `RULE`s
+
+## See [`RULE` pragma](https://downloads.haskell.org/~ghc/7.0.1/docs/html/users_guide/rewrite-rules.html)
+
+```haskell
+{-# RULE fold . map = foldMap #-}
+{-# RULE a*b+c = fmadd a b c #-}
+```
+
+## Do `foldMap` and `fmadd` need to be visible in external interface?
+
+### Generic interface
+---
+# Monomorphic interfaces
+```haskell
+import Text.Parsec
+
+x :: Parser state input result
+```
+
+### Monomorphized interface for a common case:
+* with `ByteString` _input_
+* and no _state_
+
+```haskell
+import Text.Parsec.ByteString
+
+x :: ByteStringParser result
+```
+
+---
+# Better a class instance than a function
+
+## `ByteString.map` is better expressed as instance of `Functor`
+## Standarization of names
+## Easier to learn the API too!
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    <!--script src="remark/src/remark.js"-->
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
