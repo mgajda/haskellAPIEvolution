@@ -23,6 +23,8 @@
 class: center, middle
 
 # Haskell API evolution
+#### _Haskell 102 series_
+
 ### Michal J. Gajda
 
 ## Presented on Haskell.SG
@@ -31,6 +33,9 @@ class: center, middle
 
 ---
 # Goal of this talk
+
+## API = _Application Programming Interface_
+### _(Exported functions, types, constructors etc.)_
 
 ## This is invitation for the discussion.
 
@@ -167,9 +172,18 @@ x :: ByteStringParser result
 ---
 # Better a class instance than a function
 
-## `ByteString.map` is better expressed as instance of `Functor`
+## `ByteString.map` is better expressed as instance of the `Functor.map`
 ## Standarization of names
-## Easier to learn the API too!
+## Easier to learn the too!
+
+---
+# Summary
+
+## Elegant methods to handle API evolution
+### `DEPRECATE` and `RULE` pragmas
+### [HLint](https://hackage.haskell.org/package/hlint) hints
+### Common idioms decrease learning curve
+## *Please tell* about better ideas?!
     </textarea>
     <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
     <!--script src="remark/src/remark.js"-->
